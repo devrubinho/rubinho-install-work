@@ -1,4 +1,4 @@
-# 🌐 Enterprise Scripts
+# 🌐 Rubinho Install Work
 
 <div align="center">
 
@@ -175,9 +175,6 @@ Installs Task Master MCP Server.
 #### **13-install-task-master.sh** (Linux only)
 Installs Task Master MCP Server.
 
-#### **13-install-cursor-extensions.sh**
-Installs essential Cursor extensions.
-
 #### **14-configure-cursor.sh**
 Applies Cursor configurations.
 - Downloads settings from remote repository
@@ -216,11 +213,11 @@ Configures GitHub token for private repositories.
 #### **22-install-insomnia.sh**
 Installs Insomnia REST Client.
 
-#### **23-install-heidisql.sh** (Linux only)
-Installs HeidiSQL for Linux.
+#### **23-install-tableplus.sh** (Linux only)
+Installs TablePlus for Linux.
 
-#### **23-install-heidisql.sh** (macOS only)
-Installs HeidiSQL for macOS.
+#### **23-install-tableplus.sh** (macOS only)
+Installs TablePlus for macOS.
 
 ---
 
@@ -269,7 +266,7 @@ enterprise-scripts/
 
 #### Configuration Files
 - Configuration files (starship.toml, user-settings.json, cursor-keyboard.json, zsh-config) are automatically downloaded from the remote repository during installation
-- The scripts fetch configurations from: `https://github.com/devrubinho/rubinho-scripts`
+- The scripts fetch configurations from: `https://github.com/devrubinho/rubinho-install-dev`
 
 ---
 
@@ -445,9 +442,6 @@ Instala o servidor MCP Task Master.
 #### **13-install-task-master.sh** (Apenas Linux)
 Instala o servidor MCP Task Master.
 
-#### **13-install-cursor-extensions.sh**
-Instala extensões essenciais do Cursor.
-
 #### **14-configure-cursor.sh**
 Aplica configurações do Cursor.
 - Baixa configurações do repositório remoto
@@ -486,11 +480,11 @@ Configura token do GitHub para repositórios privados.
 #### **22-install-insomnia.sh**
 Instala o cliente REST Insomnia.
 
-#### **23-install-heidisql.sh** (Apenas Linux)
-Instala HeidiSQL para Linux.
+#### **23-install-tableplus.sh** (Apenas Linux)
+Instala TablePlus para Linux.
 
-#### **23-install-heidisql.sh** (Apenas macOS)
-Instala HeidiSQL para macOS.
+#### **23-install-tableplus.sh** (Apenas macOS)
+Instala TablePlus para macOS.
 
 ---
 
@@ -539,7 +533,7 @@ enterprise-scripts/
 
 #### Arquivos de Configuração
 - Arquivos de configuração (starship.toml, user-settings.json, cursor-keyboard.json, zsh-config) são baixados automaticamente do repositório remoto durante a instalação
-- Os scripts buscam configurações de: `https://github.com/devrubinho/rubinho-scripts`
+- Os scripts buscam configurações de: `https://github.com/devrubinho/rubinho-install-dev`
 
 ---
 

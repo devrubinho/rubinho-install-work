@@ -2,9 +2,10 @@
 
 set -e
 
-WORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-ENV_FILE="$WORK_DIR/.env"
-ENV_EXAMPLE="$WORK_DIR/.env.example"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+ENV_FILE="$PROJECT_ROOT/.env"
+ENV_EXAMPLE="$PROJECT_ROOT/.env.example"
 
 # Validate .env file exists
 if [ ! -f "$ENV_FILE" ]; then
@@ -66,7 +67,7 @@ else
     echo "   6. Copy the token (you won't see it again!)"
     echo ""
     echo "💡 Tip: You can also pass the token as argument:"
-    echo "   bash 21-configure-github-token.sh YOUR_TOKEN"
+    echo "   bash 22-configure-github-token.sh YOUR_TOKEN"
     echo ""
     read -p "Enter your GitHub token (or press Enter to skip): " GITHUB_TOKEN_INPUT
 fi
@@ -110,4 +111,3 @@ echo "📝 Next steps:"
 echo "   1. Restart your terminal or run: source ~/.zshrc"
 echo "   2. Verify: echo \$GITHUB_TOKEN"
 echo ""
-

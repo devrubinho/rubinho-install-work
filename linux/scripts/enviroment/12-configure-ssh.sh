@@ -41,3 +41,4 @@ echo "=============================================="
 echo "✅ SSH public key copied to clipboard!"
 echo "   Go to GitHub/GitLab Settings → SSH Keys and paste it."
 echo "▶ Next, run: bash 13-configure-inotify.sh"
+

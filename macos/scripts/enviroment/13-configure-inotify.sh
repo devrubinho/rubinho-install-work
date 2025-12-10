@@ -23,5 +23,4 @@ cat /proc/sys/fs/inotify/max_user_watches
 echo "=============================================="
 echo "============== [13] DONE ===================="
 echo "=============================================="
-echo "▶ Next, run: bash 13-install-cursor-extensions.sh"
-
+echo "▶ Next, run: bash 14-install-task-master.sh"

@@ -39,9 +39,19 @@ echo "This script will install and configure your development environment."
 echo ""
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 ENV_FILE="$PROJECT_ROOT/.env"
 ENV_EXAMPLE="$PROJECT_ROOT/.env.example"
+
+# Load check_installed functions
+if [ -f "$PROJECT_ROOT/lib/check_installed.sh" ]; then
+    source "$PROJECT_ROOT/lib/check_installed.sh"
+fi
+
+# Load apt helper functions
+if [ -f "$PROJECT_ROOT/lib/apt_helper.sh" ]; then
+    source "$PROJECT_ROOT/lib/apt_helper.sh"
+fi
 
 # Load environment variables from .env file if it exists
 if [ -f "$ENV_FILE" ]; then
@@ -104,6 +114,7 @@ fi
 export GIT_USER_NAME
 export GIT_USER_EMAIL
 export GITHUB_TOKEN
+export INSTALL_ALL_RUNNING=1
 
 echo ""
 echo "=============================================="
@@ -128,15 +139,50 @@ echo "=============================================="
 echo "PHASE 1: Initial Setup"
 echo "=============================================="
 
-echo ""
-echo "Running script 01: configure-git.sh"
-echo "=============================================="
-bash "$SCRIPT_DIR/01-configure-git.sh"
+scripts_phase1=(
+  "01-configure-git.sh"
+  "02-install-zsh.sh"
+)
 
-echo ""
-echo "Running script 02: install-zsh.sh"
-echo "=============================================="
-bash "$SCRIPT_DIR/02-install-zsh.sh"
+for script in "${scripts_phase1[@]}"; do
+  echo ""
+  echo "Running: $script"
+  echo "=============================================="
+
+  # Always ask user if they want to run/install
+  if [ -t 0 ]; then  # Check if running interactively
+    read -p "Do you want to install/run $script? [Y/n]: " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+      echo "Skipping $script"
+      continue
+    else
+      echo "Installing/running $script..."
+    fi
+  else
+    # Non-interactive mode - run automatically
+    echo "Installing/running $script (non-interactive mode)..."
+  fi
+
+  if bash "$SCRIPT_DIR/$script"; then
+    echo "✓ $script completed successfully"
+  else
+    EXIT_CODE=$?
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "❌ INSTALLATION FAILED"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Script: $script"
+    echo "Exit code: $EXIT_CODE"
+    echo ""
+    echo "Installation stopped due to error."
+    echo "Please fix the issue and run the installation again:"
+    echo "  bash $SCRIPT_DIR/00-install-all.sh"
+    echo ""
+    exit $EXIT_CODE
+  fi
+done
 
 echo ""
 echo "=============================================="
@@ -144,15 +190,50 @@ echo "PHASE 2: Environment Configuration"
 echo "=============================================="
 
 # Part 2: Environment setup (03-04)
-echo ""
-echo "Running script 03: install-zinit.sh"
-echo "=============================================="
-bash "$SCRIPT_DIR/03-install-zinit.sh"
+scripts_phase2=(
+  "03-install-zinit.sh"
+  "04-install-starship.sh"
+)
 
-echo ""
-echo "Running script 04: install-starship.sh"
-echo "=============================================="
-bash "$SCRIPT_DIR/04-install-starship.sh"
+for script in "${scripts_phase2[@]}"; do
+  echo ""
+  echo "Running: $script"
+  echo "=============================================="
+
+  # Always ask user if they want to run/install
+  if [ -t 0 ]; then  # Check if running interactively
+    read -p "Do you want to install/run $script? [Y/n]: " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+      echo "Skipping $script"
+      continue
+    else
+      echo "Installing/running $script..."
+    fi
+  else
+    # Non-interactive mode - run automatically
+    echo "Installing/running $script (non-interactive mode)..."
+  fi
+
+  if bash "$SCRIPT_DIR/$script"; then
+    echo "✓ $script completed successfully"
+  else
+    EXIT_CODE=$?
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "❌ INSTALLATION FAILED"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Script: $script"
+    echo "Exit code: $EXIT_CODE"
+    echo ""
+    echo "Installation stopped due to error."
+    echo "Please fix the issue and run the installation again:"
+    echo "  bash $SCRIPT_DIR/00-install-all.sh"
+    echo ""
+    exit $EXIT_CODE
+  fi
+done
 
 echo ""
 echo "=============================================="
@@ -172,6 +253,21 @@ for script in "${scripts[@]}"; do
   echo "Running: $script"
   echo "=============================================="
 
+  # Always ask user if they want to run/install
+  if [ -t 0 ]; then  # Check if running interactively
+    read -p "Do you want to install/run $script? [Y/n]: " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+      echo "Skipping $script"
+      continue
+    else
+      echo "Installing/running $script..."
+    fi
+  else
+    # Non-interactive mode - run automatically
+    echo "Installing/running $script (non-interactive mode)..."
+  fi
+
   # Before each script, reload NVM if it exists
   export NVM_DIR="$HOME/.nvm"
   [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" || true
@@ -180,8 +276,19 @@ for script in "${scripts[@]}"; do
     echo "✓ $script completed successfully"
   else
     EXIT_CODE=$?
-    echo "❌ $script failed with exit code $EXIT_CODE"
-    echo "⚠️  Continuing with next script..."
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "❌ INSTALLATION FAILED"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Script: $script"
+    echo "Exit code: $EXIT_CODE"
+    echo ""
+    echo "Installation stopped due to error."
+    echo "Please fix the issue and run the installation again:"
+    echo "  bash $SCRIPT_DIR/00-install-all.sh"
+    echo ""
+    exit $EXIT_CODE
   fi
 done
 
@@ -194,27 +301,41 @@ echo "=============================================="
 scripts=(
   "09-install-cursor.sh"
   "10-install-claude.sh"
-  "10-configure-terminal.sh"
-  "11-configure-ssh.sh"
-  "12-configure-inotify.sh"
-  "13-install-task-master.sh"
-  "13-install-cursor-extensions.sh"
-  "14-configure-cursor.sh"
-  "15-install-docker.sh"
-  "16-install-aws-vpn-client.sh"
-  "17-install-aws-cli.sh"
-  "18-configure-aws-sso.sh"
-  "19-install-dotnet.sh"
-  "20-install-java.sh"
-  "21-configure-github-token.sh"
-  "22-install-insomnia.sh"
-  "23-install-heidisql.sh"
+  "11-configure-terminal.sh"
+  "12-configure-ssh.sh"
+  "13-configure-inotify.sh"
+  "14-install-task-master.sh"
+  "15-configure-cursor.sh"
+  "16-install-docker.sh"
+  "17-install-aws-vpn-client.sh"
+  "18-install-aws-cli.sh"
+  "19-configure-aws-sso.sh"
+  "20-install-dotnet.sh"
+  "21-install-java.sh"
+  "22-configure-github-token.sh"
+  "23-install-insomnia.sh"
+  "24-install-tableplus.sh"
 )
 
 for script in "${scripts[@]}"; do
   echo ""
   echo "Running: $script"
   echo "=============================================="
+
+  # Always ask user if they want to run/install
+  if [ -t 0 ]; then  # Check if running interactively
+    read -p "Do you want to install/run $script? [Y/n]: " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+      echo "Skipping $script"
+      continue
+    else
+      echo "Installing/running $script..."
+    fi
+  else
+    # Non-interactive mode - run automatically
+    echo "Installing/running $script (non-interactive mode)..."
+  fi
 
   # Before each script, reload NVM if it exists
   export NVM_DIR="$HOME/.nvm"
@@ -224,8 +345,19 @@ for script in "${scripts[@]}"; do
     echo "✓ $script completed successfully"
   else
     EXIT_CODE=$?
-    echo "❌ $script failed with exit code $EXIT_CODE"
-    echo "⚠️  Continuing with next script..."
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "❌ INSTALLATION FAILED"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Script: $script"
+    echo "Exit code: $EXIT_CODE"
+    echo ""
+    echo "Installation stopped due to error."
+    echo "Please fix the issue and run the installation again:"
+    echo "  bash $SCRIPT_DIR/00-install-all.sh"
+    echo ""
+    exit $EXIT_CODE
   fi
 done
 

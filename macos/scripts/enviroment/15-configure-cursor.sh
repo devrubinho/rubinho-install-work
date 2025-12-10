@@ -3,7 +3,7 @@
 set -e
 
 # Repository configuration
-CONFIG_REPO="https://raw.githubusercontent.com/devrubinho/rubinho-scripts/main"
+CONFIG_REPO="https://raw.githubusercontent.com/devrubinho/rubinho-install-dev/main"
 PLATFORM="macos"
 
 # Function to download config file from repository
@@ -72,4 +72,4 @@ echo "=============================================="
 echo "🎉 Cursor configured successfully!"
 echo "   Open Cursor again to apply everything."
 echo ""
-echo "▶ Next, run: bash 15-install-docker.sh (final step)"
+echo "▶ Next, run: bash 16-install-docker.sh (final step)"

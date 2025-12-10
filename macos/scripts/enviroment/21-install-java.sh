@@ -10,11 +10,11 @@ echo "=============================================="
 if command -v java &> /dev/null; then
     CURRENT_VERSION=$(java -version 2>&1 | head -n 1 | awk -F '"' '{print $2}')
     MAJOR_VERSION=$(echo "$CURRENT_VERSION" | cut -d. -f1)
-    
+
     if [ "$MAJOR_VERSION" = "11" ]; then
         echo "✓ Java 11 is already installed (version: $CURRENT_VERSION)"
         echo "Skipping installation..."
-        
+
         # Verify JAVA_HOME is set
         if [ -z "$JAVA_HOME" ]; then
             echo "⚠️  JAVA_HOME is not set. Setting it up..."
@@ -55,7 +55,7 @@ if command -v java &> /dev/null; then
     INSTALLED_VERSION=$(java -version 2>&1 | head -n 1)
     echo "✓ Java installed successfully"
     echo "  $INSTALLED_VERSION"
-    
+
     # Show Java version details
     echo ""
     echo "Java details:"
@@ -69,5 +69,4 @@ echo "=============================================="
 echo "============== [22] DONE ===================="
 echo "=============================================="
 echo "⚠️  Restart terminal or run: source ~/.zshrc"
-echo "▶ Next, run: bash 21-configure-github-token.sh"
-
+echo "▶ Next, run: bash 22-configure-github-token.sh"

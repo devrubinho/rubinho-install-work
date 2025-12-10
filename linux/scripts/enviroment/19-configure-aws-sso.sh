@@ -2,9 +2,10 @@
 
 set -e
 
-WORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-ENV_FILE="$WORK_DIR/.env"
-ENV_EXAMPLE="$WORK_DIR/.env.example"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+ENV_FILE="$PROJECT_ROOT/.env"
+ENV_EXAMPLE="$PROJECT_ROOT/.env.example"
 
 # Validate .env file exists
 if [ ! -f "$ENV_FILE" ]; then
@@ -111,24 +112,24 @@ while true; do
     account_id_var="AWS_ACCOUNT_${account_num}_ID"
     role_var="AWS_ACCOUNT_${account_num}_ROLE"
     profile_var="AWS_ACCOUNT_${account_num}_PROFILE"
-    
+
     account_id="${!account_id_var}"
     role="${!role_var}"
     profile="${!profile_var}"
-    
+
     if [ -z "$account_id" ] || [ -z "$role" ]; then
         break
     fi
-    
+
     # Use profile name or default to account number
     profile_name="${profile:-account-${account_num}}"
-    
+
     # Skip if this is account 1 and we already added it as default
     if [ "$account_num" -eq 1 ] && [ -n "$AWS_DEFAULT_ACCOUNT_ID" ] && [ "$account_id" = "$AWS_DEFAULT_ACCOUNT_ID" ]; then
         account_num=$((account_num + 1))
         continue
     fi
-    
+
     cat >> "$HOME/.aws/config" << EOF
 
 [profile $profile_name]
@@ -138,7 +139,7 @@ sso_role_name = $role
 region = $AWS_DEFAULT_REGION
 output = json
 EOF
-    
+
     account_num=$((account_num + 1))
 done
 

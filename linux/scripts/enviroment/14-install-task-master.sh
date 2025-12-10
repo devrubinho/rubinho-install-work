@@ -29,7 +29,7 @@ fi
 set -e
 
 echo "=============================================="
-echo "===== [12] INSTALLING TASK MASTER (MCP) ====="
+echo "===== [13] INSTALLING TASK MASTER (MCP) ====="
 echo "=============================================="
 
 # ────────────────────────────────
@@ -57,12 +57,25 @@ export NVM_DIR="$HOME/.nvm"
 
 # Verify Node.js is available
 if ! command -v node &> /dev/null && ! command -v npm &> /dev/null; then
-    echo "⚠️  Node.js/npm not found. Task Master will be installed when Node.js is available."
-    echo "   The MCP configuration will be created, but you'll need Node.js to use it."
+    echo "❌ Node.js/npm not found."
+    echo "   Task Master requires Node.js to be installed."
+    echo "   Please install Node.js first (script 05-install-node-nvm.sh) and run this script again."
+    exit 1
+fi
+
+# Check if already installed
+if command -v task-master-ai &> /dev/null || npm list -g task-master-ai &> /dev/null 2>&1; then
+    echo "✓ Task Master is already installed"
+    echo "Skipping installation..."
 else
-    echo "→ Installing Task Master globally..."
-    npm install -g task-master-ai
-    echo "✓ Task Master installed globally"
+    echo "→ Installing Task Master globally via npm..."
+    echo "  This may take 30-60 seconds..."
+    if npm install -g task-master-ai; then
+        echo "✓ Task Master installed globally"
+    else
+        echo "❌ Failed to install Task Master"
+        exit 1
+    fi
 fi
 
 # ────────────────────────────────
@@ -118,7 +131,7 @@ echo "📋 Next Steps:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "1. ⚙️  Enable Task Master in Cursor:"
-echo "   - Open Cursor Settings (Cmd+,)"
+echo "   - Open Cursor Settings (Ctrl+,)"
 echo "   - Go to 'MCP' tab"
 echo "   - Enable 'taskmaster-ai' toggle"
 echo ""
@@ -133,6 +146,6 @@ echo "🌐 Website: https://www.task-master.dev/"
 echo ""
 
 echo "=============================================="
-echo "============== [12] DONE ===================="
+echo "============== [13] DONE ===================="
 echo "=============================================="
-echo "▶ Next, run: bash 12-configure-cursor.sh"
+echo "▶ Next, run: bash 15-configure-cursor.sh"

@@ -10,7 +10,7 @@ echo "=============================================="
 if command -v dotnet &> /dev/null; then
     CURRENT_VERSION=$(dotnet --version 2>/dev/null | head -n 1)
     MAJOR_VERSION=$(echo "$CURRENT_VERSION" | cut -d. -f1)
-    
+
     if [ "$MAJOR_VERSION" = "8" ]; then
         echo "✓ .NET 8 is already installed (version: $CURRENT_VERSION)"
         echo "Skipping installation..."
@@ -52,7 +52,7 @@ sudo apt-get install -y dotnet-sdk-8.0
 if command -v dotnet &> /dev/null; then
     INSTALLED_VERSION=$(dotnet --version)
     echo "✓ .NET SDK installed successfully (version: $INSTALLED_VERSION)"
-    
+
     # Show installed SDKs
     echo ""
     echo "Installed SDKs:"
@@ -65,5 +65,4 @@ fi
 echo "=============================================="
 echo "============== [21] DONE ===================="
 echo "=============================================="
-echo "▶ Next, run: bash 20-install-java.sh"
-
+echo "▶ Next, run: bash 21-install-java.sh"

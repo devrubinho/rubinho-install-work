@@ -3,7 +3,7 @@
 set -e
 
 # Repository configuration
-CONFIG_REPO="https://raw.githubusercontent.com/devrubinho/rubinho-scripts/main"
+CONFIG_REPO="https://raw.githubusercontent.com/devrubinho/rubinho-install-dev/main"
 PLATFORM="macos"
 
 # Function to download config file from repository

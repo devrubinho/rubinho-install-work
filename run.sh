@@ -4,6 +4,16 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Load platform detection library (must be first)
+if [ -f "$SCRIPT_DIR/lib/platform.sh" ]; then
+    source "$SCRIPT_DIR/lib/platform.sh"
+fi
+
+# Load AWS helper library
+if [ -f "$SCRIPT_DIR/lib/aws_helper.sh" ]; then
+    source "$SCRIPT_DIR/lib/aws_helper.sh"
+fi
+
 echo "╔════════════════════════════════════════════════════════════════╗"
 echo "║         🚀 Enterprise Scripts - Interactive Launcher 🚀         ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
@@ -18,26 +28,92 @@ setup_environment_variables() {
     echo "⚙️  Environment Configuration"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    echo "Checking required environment variables..."
-    echo ""
 
-    # Check if .env exists, if not create from .env.example
+    # Check if .env exists, if not create empty file
     local env_file="$SCRIPT_DIR/.env"
     local env_example="$SCRIPT_DIR/.env.example"
 
     if [ ! -f "$env_file" ]; then
+        echo "📝 Creating new .env file..."
+        touch "$env_file"
+        echo "✓ Created empty .env file"
         if [ -f "$env_example" ]; then
-            echo "📝 Creating .env file from .env.example..."
-            cp "$env_example" "$env_file"
-            echo "✓ Created .env file"
             echo ""
-        else
-            echo "📝 Creating new .env file..."
-            touch "$env_file"
-            echo "✓ Created empty .env file"
+            echo "💡 Tip: You can use .env.example as a reference:"
+            echo "   cat $env_example"
             echo ""
         fi
     fi
+
+    # Show current .env file contents
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📄 Current .env file contents:"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    if [ -s "$env_file" ]; then
+        # Show contents with line numbers and highlight empty/commented lines
+        local line_num=1
+        while IFS= read -r line || [ -n "$line" ]; do
+            if [[ "$line" =~ ^[[:space:]]*# ]]; then
+                printf "  %3d: %s\n" "$line_num" "$line"
+            elif [[ -z "${line// }" ]]; then
+                printf "  %3d: (empty line)\n" "$line_num"
+            else
+                # Mask sensitive values (tokens, keys, etc)
+                local masked_line="$line"
+                if [[ "$line" =~ ^[[:space:]]*(GITHUB_TOKEN|AWS_.*_KEY|.*TOKEN|.*SECRET|.*PASSWORD)[[:space:]]*= ]]; then
+                    masked_line=$(echo "$line" | sed 's/=.*/=***HIDDEN***/')
+                fi
+                printf "  %3d: %s\n" "$line_num" "$masked_line"
+            fi
+            ((line_num++))
+        done < "$env_file"
+    else
+        echo "  (file is empty)"
+    fi
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    # Ask if user wants to continue with current .env or edit it
+    local edited_env=false
+    read -p "Is the .env file correct? Continue? [Y/n]: " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+        echo ""
+        echo "Opening .env file for editing..."
+        echo "  File location: $env_file"
+        echo ""
+
+        # Try to use common editors
+        if command -v nano &> /dev/null; then
+            nano "$env_file"
+        elif command -v vim &> /dev/null; then
+            vim "$env_file"
+        elif command -v vi &> /dev/null; then
+            vi "$env_file"
+        else
+            echo "⚠️  No text editor found (nano, vim, vi)"
+            echo "   Please edit the file manually: $env_file"
+            echo ""
+            read -p "Press Enter after editing the file..."
+        fi
+
+        echo ""
+        echo "✓ .env file updated"
+        echo ""
+        edited_env=true
+    else
+        echo "✓ Continuing with current .env file"
+        echo ""
+    fi
+
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Checking required environment variables..."
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
 
     # Variables that might be needed for installation
     local required_vars=(
@@ -45,10 +121,6 @@ setup_environment_variables() {
         "GIT_USER_EMAIL:Your Git user email (for Git commits):true"
     )
 
-    local optional_vars=(
-        "GITHUB_TOKEN:GitHub token (for private repositories):false"
-        "AWS_SSO_START_URL:AWS SSO start URL (for AWS SSO configuration):false"
-    )
 
     # Check required variables
     for var_info in "${required_vars[@]}"; do
@@ -126,78 +198,80 @@ setup_environment_variables() {
         fi
     done
 
-    # Check optional variables (only prompt if user wants to configure them)
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "📋 Optional Configuration"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
-    echo "You can configure optional variables now, or skip and configure later."
-    echo ""
-
-    read -p "Configure optional variables now? [y/N]: " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        for var_info in "${optional_vars[@]}"; do
-            IFS=':' read -r var_name prompt_text is_required <<< "$var_info"
-
-            # Check if variable exists in .env
-            local value=""
-            if [ -f "$env_file" ]; then
-                # Try to read from .env
-                while IFS= read -r line || [ -n "$line" ]; do
-                    # Skip comments and empty lines
-                    [[ "$line" =~ ^[[:space:]]*# ]] && continue
-                    [[ -z "${line// }" ]] && continue
-
-                    # Check if this line matches our variable
-                    if [[ "$line" =~ ^[[:space:]]*${var_name}[[:space:]]*=[[:space:]]*(.+)$ ]]; then
-                        value="${BASH_REMATCH[1]}"
-                        # Remove quotes if present
-                        value="${value#\"}"
-                        value="${value%\"}"
-                        value="${value#\'}"
-                        value="${value%\'}"
-                        # Remove leading/trailing whitespace
-                        value="${value#"${value%%[![:space:]]*}"}"
-                        value="${value%"${value##*[![:space:]]}"}"
-                        break
-                    fi
-                done < "$env_file"
-            fi
-
-            # If not found or empty, prompt user
-            if [ -z "${value// }" ] || [ -z "$value" ]; then
-                echo ""
-                echo "$prompt_text"
-                read -p "Enter value for $var_name (or press Enter to skip): " user_input
-
-                if [ -n "$user_input" ]; then
-                    # Remove empty value if exists
-                    if grep -q "^[[:space:]]*${var_name}[[:space:]]*=" "$env_file" 2>/dev/null; then
-                        if [[ "$OSTYPE" == "darwin"* ]]; then
-                            sed -i '' "/^[[:space:]]*${var_name}[[:space:]]*=/d" "$env_file"
-                        else
-                            sed -i "/^[[:space:]]*${var_name}[[:space:]]*=/d" "$env_file"
-                        fi
-                    fi
-                    echo "${var_name}=\"${user_input}\"" >> "$env_file"
-                    echo "✓ Saved $var_name to .env file"
-                else
-                    echo "⏭️  Skipped $var_name"
-                fi
-            else
-                echo "✓ Found $var_name in .env file (using existing value)"
-            fi
-        done
-    else
-        echo "⏭️  Skipping optional variables configuration"
-    fi
 
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "✅ Environment configuration complete"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    # Check for AWS Account variables
+    check_aws_account_variables
+}
+
+# ────────────────────────────────
+# Check AWS Account Variables
+# ────────────────────────────────
+
+check_aws_account_variables() {
+    local env_file="$SCRIPT_DIR/.env"
+
+    # Check if AWS account variables exist using library function
+    if has_aws_account_variables "$env_file"; then
+        return 0
+    fi
+
+    # If no AWS account variables found, suggest getting them
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "☁️  AWS Account Variables Not Found"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "No AWS account variables (AWS_ACCOUNT_*_ID) found in .env file."
+    echo ""
+
+    # Check if AWS config exists
+    if [ -f "$HOME/.aws/config" ]; then
+        echo "📋 We can extract AWS account information from your AWS configuration."
+        echo ""
+
+        read -p "Do you want to see your AWS variables now? [Y/n]: " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📋 Your AWS Variables (copy and paste to .env):"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+
+            # Use library function to get AWS variables
+            get_aws_env_variables
+
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "💡 To add these to your .env file automatically, run:"
+            echo "   get_aws_env_variables >> $env_file"
+            echo ""
+
+            read -p "Do you want to add these variables to .env now? [y/N]: " -n 1 -r
+            echo ""
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                get_aws_env_variables >> "$env_file"
+                echo "✓ AWS variables added to .env file"
+            fi
+
+            echo ""
+            read -p "Press Enter to continue..."
+        fi
+    else
+        echo "⚠️  AWS configuration file (~/.aws/config) not found."
+        echo ""
+        echo "To configure AWS SSO, run:"
+        echo "   bash $SCRIPT_DIR/linux/scripts/enviroment/18-configure-aws-sso.sh"
+        echo ""
+        echo "Or for macOS:"
+        echo "   bash $SCRIPT_DIR/macos/scripts/enviroment/18-configure-aws-sso.sh"
+        echo ""
+    fi
     echo ""
 }
 
@@ -205,32 +279,22 @@ setup_environment_variables() {
 setup_environment_variables
 
 # ────────────────────────────────
-# Choose Platform
+# Platform Detection
 # ────────────────────────────────
 
-echo "Select platform:"
-echo "  1) 🐧 Linux"
-echo "  2) 🍎 macOS"
-echo ""
-read -p "Choice [1-2]: " PLATFORM_CHOICE
+# Platform is automatically detected by platform.sh
+# Verify that detected platform is supported
+if [ "$PLATFORM" != "linux" ] && [ "$PLATFORM" != "macos" ]; then
+    echo "❌ Error: Unsupported platform detected: $PLATFORM"
+    echo "   This script only supports Linux and macOS."
+    exit 1
+fi
 
-case $PLATFORM_CHOICE in
-    1)
-        PLATFORM="linux"
-        PLATFORM_NAME="Linux"
-        ;;
-    2)
-        PLATFORM="macos"
-        PLATFORM_NAME="macOS"
-        ;;
-    *)
-        echo "❌ Invalid choice"
-        exit 1
-        ;;
-esac
-
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🖥️  Platform Detected"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "Platform: $PLATFORM_NAME"
+print_platform_info
 echo ""
 
 # ────────────────────────────────

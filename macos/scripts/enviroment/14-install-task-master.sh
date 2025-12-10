@@ -29,7 +29,7 @@ fi
 set -e
 
 echo "=============================================="
-echo "===== [13] INSTALLING TASK MASTER (MCP) ====="
+echo "===== [14] INSTALLING TASK MASTER (MCP) ====="
 echo "=============================================="
 
 # ────────────────────────────────
@@ -57,8 +57,10 @@ export NVM_DIR="$HOME/.nvm"
 
 # Verify Node.js is available
 if ! command -v node &> /dev/null && ! command -v npm &> /dev/null; then
-    echo "⚠️  Node.js/npm not found. Task Master will be installed when Node.js is available."
-    echo "   The MCP configuration will be created, but you'll need Node.js to use it."
+    echo "❌ Node.js/npm not found."
+    echo "   Task Master requires Node.js to be installed."
+    echo "   Please install Node.js first (script 05-install-node-nvm.sh) and run this script again."
+    exit 1
 else
     echo "→ Installing Task Master globally..."
     npm install -g task-master-ai
@@ -118,7 +120,7 @@ echo "📋 Next Steps:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "1. ⚙️  Enable Task Master in Cursor:"
-echo "   - Open Cursor Settings (Ctrl+,)"
+echo "   - Open Cursor Settings (Cmd+,)"
 echo "   - Go to 'MCP' tab"
 echo "   - Enable 'taskmaster-ai' toggle"
 echo ""
@@ -133,6 +135,6 @@ echo "🌐 Website: https://www.task-master.dev/"
 echo ""
 
 echo "=============================================="
-echo "============== [13] DONE ===================="
+echo "============== [12] DONE ===================="
 echo "=============================================="
-echo "▶ Next, run: bash 14-configure-cursor.sh"
+echo "▶ Next, run: bash 15-configure-cursor.sh"
